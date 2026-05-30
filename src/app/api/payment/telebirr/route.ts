@@ -12,8 +12,8 @@ export async function POST(req: NextRequest) {
     const { planId } = await req.json()
     if (!planId) return NextResponse.json({ error: 'planId is required' }, { status: 400 })
 
-    const plans = await query<Array<{ id: number; name: string; price_birr: number; slug: string }>>(
-      'SELECT id, name, price_birr, slug FROM plans WHERE id = ? AND is_active = TRUE',
+    const plans = await query<Array<{ id: number; name: string; price_birr: number }>>(
+      'SELECT id, name, price_birr FROM plans WHERE id = ? AND is_active = TRUE',
       [planId]
     )
     if (plans.length === 0) return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
@@ -22,25 +22,24 @@ export async function POST(req: NextRequest) {
     if (plan.price_birr <= 0) return NextResponse.json({ error: 'Cannot pay for free plan' }, { status: 400 })
 
     const outTradeNo = `COD-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+    const appUrl     = process.env.NEXT_PUBLIC_APP_URL!
 
     await query(
       'INSERT INTO transactions (user_id, out_trade_no, amount, plan_id, status) VALUES (?, ?, ?, ?, ?)',
       [session.userId, outTradeNo, plan.price_birr, plan.id, 'pending']
     )
 
-    const { toPayUrl } = await initiateTelebirrPayment({
+    const { rawRequest } = await initiateTelebirrPayment({
       outTradeNo,
-      totalAmount: Number(plan.price_birr).toFixed(2),
-      subject: `Codevora ${plan.name} Plan - 1 month`,
+      amount:    Number(plan.price_birr).toFixed(2),
+      title:     `Codevora ${plan.name} Plan`,
       notifyUrl: `${appUrl}/api/payment/telebirr/callback`,
-      returnUrl: `${appUrl}/payment/success?order=${outTradeNo}`,
     })
 
-    return NextResponse.json({ success: true, data: { toPayUrl } })
+    return NextResponse.json({ success: true, data: { rawRequest } })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error('Telebirr initiate error:', message)
+    console.error('Telebirr error:', message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

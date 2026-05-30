@@ -82,7 +82,29 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
-      window.location.href = json.data.toPayUrl
+
+      const { rawRequest } = json.data
+
+      // Must be inside the Telebirr SuperApp browser
+      const w = window as unknown as { consumerapp?: { evaluate: (s: string) => void } }
+      if (!w.consumerapp) {
+        toast.error('Please open this page inside the Telebirr app to pay')
+        setUpgrading(false)
+        return
+      }
+
+      w.consumerapp.evaluate(JSON.stringify({
+        functionName: 'js_fun_start_pay',
+        params: {
+          rawRequest: rawRequest.trim(),
+          functionCallBackName: 'handleTelebirrCallback',
+        },
+      }))
+
+      // Callback from Telebirr after payment
+      ;(window as Record<string, unknown>).handleTelebirrCallback = () => {
+        router.push('/payment/success')
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to start payment')
       setUpgrading(false)
