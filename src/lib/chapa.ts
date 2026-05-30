@@ -35,8 +35,9 @@ export async function initializeChapaPayment(params: ChapaInitParams): Promise<{
   })
 
   const data = await res.json()
+  console.error('Chapa init response:', JSON.stringify(data))
   if (data.status !== 'success' || !data.data?.checkout_url) {
-    throw new Error(`Chapa init failed: ${data.message ?? JSON.stringify(data)}`)
+    throw new Error(`Chapa init failed: ${JSON.stringify(data)}`)
   }
 
   return { checkoutUrl: data.data.checkout_url as string }
