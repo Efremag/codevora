@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: { toPayUrl } })
   } catch (err) {
-    console.error('Telebirr initiate error:', err)
-    return NextResponse.json({ error: 'Failed to initiate payment' }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('Telebirr initiate error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

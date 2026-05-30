@@ -34,11 +34,16 @@ function rsaEncrypt(data: string, rawPublicKey: string): string {
 }
 
 export async function initiateTelebirrPayment(params: PaymentParams) {
-  const appId      = process.env.TELEBIRR_APP_ID!
-  const shortCode  = process.env.TELEBIRR_SHORT_CODE!
-  const appSecret  = process.env.TELEBIRR_APP_SECRET!
-  const publicKey  = process.env.TELEBIRR_PUBLIC_KEY!
+  const appId      = process.env.TELEBIRR_APP_ID
+  const shortCode  = process.env.TELEBIRR_SHORT_CODE
+  const appSecret  = process.env.TELEBIRR_APP_SECRET
+  const publicKey  = process.env.TELEBIRR_PUBLIC_KEY
   const apiUrl     = process.env.TELEBIRR_API_URL || 'https://app.ethiotelecom.et/payment/v2/webpay'
+
+  if (!appId)     throw new Error('TELEBIRR_APP_ID is not set')
+  if (!shortCode) throw new Error('TELEBIRR_SHORT_CODE is not set')
+  if (!appSecret) throw new Error('TELEBIRR_APP_SECRET is not set')
+  if (!publicKey) throw new Error('TELEBIRR_PUBLIC_KEY is not set — get it from the Telebirr merchant portal')
 
   const nonce     = generateNonce()
   const timestamp = Date.now().toString()
