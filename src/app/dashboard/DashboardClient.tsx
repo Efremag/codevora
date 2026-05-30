@@ -102,7 +102,7 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
       }))
 
       // Callback from Telebirr after payment
-      ;(window as Record<string, unknown>).handleTelebirrCallback = () => {
+      ;(window as unknown as Record<string, unknown>).handleTelebirrCallback = () => {
         router.push('/payment/success')
       }
     } catch (err: unknown) {
