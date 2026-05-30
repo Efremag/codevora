@@ -10,7 +10,7 @@ const plans = [
     description: 'Perfect for getting started',
     badge: null,
     features: [
-      { text: 'Up to 5 links', included: true },
+      { text: 'Up to 3 links', included: true },
       { text: 'Public profile page', included: true },
       { text: 'Basic themes', included: true },
       { text: 'Mobile-optimized', included: true },
@@ -40,7 +40,7 @@ const plans = [
       { text: 'Profile view stats', included: true },
       { text: 'Priority support', included: false },
     ],
-    cta: 'Start Pro — Coming Soon',
+    cta: 'Get Pro — 199 ETB/month',
     ctaStyle: 'btn-primary',
     highlighted: true,
   },
@@ -138,7 +138,7 @@ export default function Pricing() {
         </div>
 
         <p className="text-center text-gray-400 text-sm mt-8">
-          💳 Chapa & Telebirr payment integration coming soon. Beta users get Pro free.
+          💳 Pay securely via Telebirr. Cancel anytime.
         </p>
       </div>
     </section>

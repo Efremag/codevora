@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS profile_views (
 -- ============================================================
 
 INSERT INTO plans (name, slug, max_links, has_analytics, has_custom_themes, has_custom_domain, price_birr, price_usd) VALUES
-('Free', 'free', 5, FALSE, FALSE, FALSE, 0.00, 0.00),
+('Free', 'free', 3, FALSE, FALSE, FALSE, 0.00, 0.00),
 ('Pro', 'pro', 999, TRUE, TRUE, FALSE, 199.00, 4.99),
 ('Business', 'business', 999, TRUE, TRUE, TRUE, 499.00, 9.99);
 
@@ -106,6 +106,21 @@ INSERT INTO users (email, password_hash, plan_id, is_active, is_admin, email_ver
 
 INSERT INTO profiles (user_id, username, display_name, bio, theme_color) VALUES
 (1, 'admin', 'Codevora Admin', 'Official Codevora Link admin account.', '#F97316');
+
+-- Transactions table (Telebirr payments)
+CREATE TABLE IF NOT EXISTS transactions (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  out_trade_no VARCHAR(100) NOT NULL UNIQUE,
+  amount DECIMAL(10,2) NOT NULL,
+  plan_id INT NOT NULL,
+  status ENUM('pending','completed','failed') NOT NULL DEFAULT 'pending',
+  telebirr_trade_no VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (plan_id) REFERENCES plans(id)
+);
 
 -- ============================================================
 -- Useful indexes

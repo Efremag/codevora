@@ -70,6 +70,24 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
   const [newIcon, setNewIcon] = useState('link')
   const [addingLink, setAddingLink] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
+
+  const handleUpgrade = async (planId: number) => {
+    setUpgrading(true)
+    try {
+      const res = await fetch('/api/payment/telebirr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      window.location.href = json.data.toPayUrl
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to start payment')
+      setUpgrading(false)
+    }
+  }
 
   const publicUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/u/${profile?.username || user.email}`
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
@@ -275,6 +293,24 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
         {/* LINKS TAB */}
         {activeTab === 'links' && (
           <div className="space-y-4">
+            {/* Upgrade banner for free users */}
+            {user.plan_slug === 'free' && (
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Upgrade to Pro</p>
+                  <p className="text-xs text-gray-500">Unlimited links, analytics & more — 199 ETB/month</p>
+                </div>
+                <button
+                  onClick={() => handleUpgrade(2)}
+                  disabled={upgrading}
+                  className="btn-primary text-xs !py-2 !px-4 shrink-0 flex items-center gap-1.5"
+                >
+                  <Crown size={13} />
+                  {upgrading ? 'Loading...' : 'Upgrade'}
+                </button>
+              </div>
+            )}
+
             {/* Add link button */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
@@ -505,9 +541,14 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
                 <p className="text-gray-500 text-sm mb-4">
                   Upgrade to Pro to see detailed click analytics, daily trends, and top-performing links.
                 </p>
-                <a href="#pricing" className="btn-primary text-sm inline-block">
-                  Upgrade to Pro — 199 ETB/month
-                </a>
+                <button
+                  onClick={() => handleUpgrade(2)}
+                  disabled={upgrading}
+                  className="btn-primary text-sm inline-flex items-center gap-2"
+                >
+                  <Crown size={14} />
+                  {upgrading ? 'Loading...' : 'Upgrade to Pro — 199 ETB/month'}
+                </button>
               </div>
             ) : (
               <div className="card p-6">
