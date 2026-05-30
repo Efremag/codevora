@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const lastName = parts.slice(1).join(' ') || 'User'
 
     const txRef = `COD-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+    const appUrl = req.nextUrl.origin
 
     await query(
       'INSERT INTO transactions (user_id, out_trade_no, amount, plan_id, status) VALUES (?, ?, ?, ?, ?)',
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       txRef,
       callbackUrl: `${appUrl}/api/payment/chapa/callback`,
       returnUrl: `${appUrl}/payment/success?tx_ref=${txRef}`,
-      title: `Codevora ${plan.name} Plan`,
+      title: `Codevora ${plan.name}`.slice(0, 16),
     })
 
     return NextResponse.json({ success: true, data: { checkoutUrl } })
