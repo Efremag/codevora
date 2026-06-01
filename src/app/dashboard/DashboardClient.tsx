@@ -71,18 +71,26 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
   const [addingLink, setAddingLink] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [pendingPlanId, setPendingPlanId] = useState<number | null>(null)
 
-  const handleUpgrade = async (planId: number) => {
+  const openUpgradeModal = (planId: number) => {
+    setPendingPlanId(planId)
+    setShowPaymentModal(true)
+  }
+
+  const handleUpgrade = async (planId: number, provider: 'chapa' | 'paypal') => {
+    setShowPaymentModal(false)
     setUpgrading(true)
     try {
-      const res = await fetch('/api/payment/chapa', {
+      const endpoint = provider === 'paypal' ? '/api/payment/paypal' : '/api/payment/chapa'
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
-
       window.location.href = json.data.checkoutUrl
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to start payment')
@@ -302,7 +310,7 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
                   <p className="text-xs text-gray-500">Unlimited links, analytics & more — 199 ETB/month</p>
                 </div>
                 <button
-                  onClick={() => handleUpgrade(2)}
+                  onClick={() => openUpgradeModal(2)}
                   disabled={upgrading}
                   className="btn-primary text-xs !py-2 !px-4 shrink-0 flex items-center gap-1.5"
                 >
@@ -543,12 +551,12 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
                   Upgrade to Pro to see detailed click analytics, daily trends, and top-performing links.
                 </p>
                 <button
-                  onClick={() => handleUpgrade(2)}
+                  onClick={() => openUpgradeModal(2)}
                   disabled={upgrading}
                   className="btn-primary text-sm inline-flex items-center gap-2"
                 >
                   <Crown size={14} />
-                  {upgrading ? 'Loading...' : 'Upgrade to Pro — 199 ETB/month'}
+                  {upgrading ? 'Loading...' : 'Upgrade to Pro'}
                 </button>
               </div>
             ) : (
@@ -586,6 +594,44 @@ export default function DashboardClient({ user, profile: initialProfile, links: 
           </div>
         )}
       </main>
+
+      {/* Payment method modal */}
+      {showPaymentModal && pendingPlanId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 max-w-sm w-full">
+            <h2 className="font-black text-gray-900 text-lg mb-1">Choose Payment Method</h2>
+            <p className="text-sm text-gray-500 mb-5">Select how you would like to pay for Pro.</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleUpgrade(pendingPlanId, 'chapa')}
+                className="w-full flex items-center gap-3 border border-gray-200 rounded-xl p-4 hover:border-orange-400 hover:bg-orange-50 transition-colors text-left"
+              >
+                <span className="text-2xl">🇪🇹</span>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Chapa</p>
+                  <p className="text-xs text-gray-500">Pay 199 ETB with Chapa (local banks, Telebirr, cards)</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleUpgrade(pendingPlanId, 'paypal')}
+                className="w-full flex items-center gap-3 border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
+              >
+                <span className="text-2xl">🌐</span>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">PayPal</p>
+                  <p className="text-xs text-gray-500">Pay $4.99 USD with PayPal (international cards)</p>
+                </div>
+              </button>
+            </div>
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="mt-4 w-full text-sm text-gray-500 hover:text-gray-700 py-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

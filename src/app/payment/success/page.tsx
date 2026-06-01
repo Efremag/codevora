@@ -2,13 +2,16 @@ import Link from 'next/link'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import { query } from '@/lib/db'
 import { verifyChapaPayment } from '@/lib/chapa'
+import { capturePayPalOrder } from '@/lib/paypal'
 
 interface Props {
-  searchParams: { tx_ref?: string }
+  searchParams: { tx_ref?: string; provider?: string; token?: string }
 }
 
 export default async function PaymentSuccessPage({ searchParams }: Props) {
   const txRef = searchParams.tx_ref
+  const provider = searchParams.provider
+  const paypalOrderId = searchParams.token
   let status: 'success' | 'pending' | 'failed' | 'unknown' = 'unknown'
 
   if (txRef) {
@@ -24,15 +27,26 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
       } else if (tx.status === 'failed') {
         status = 'failed'
       } else {
-        // Pending: try to verify directly (webhook may not have fired yet)
+        // Pending — try to confirm via the payment provider
         try {
-          const { success } = await verifyChapaPayment(txRef)
-          if (success) {
-            await query("UPDATE transactions SET status = 'completed' WHERE out_trade_no = ?", [txRef])
-            await query('UPDATE users SET plan_id = ? WHERE id = ?', [tx.plan_id, tx.user_id])
-            status = 'success'
+          if (provider === 'paypal' && paypalOrderId) {
+            const { success } = await capturePayPalOrder(paypalOrderId)
+            if (success) {
+              await query("UPDATE transactions SET status = 'completed' WHERE out_trade_no = ?", [txRef])
+              await query('UPDATE users SET plan_id = ? WHERE id = ?', [tx.plan_id, tx.user_id])
+              status = 'success'
+            } else {
+              status = 'pending'
+            }
           } else {
-            status = 'pending'
+            const { success } = await verifyChapaPayment(txRef)
+            if (success) {
+              await query("UPDATE transactions SET status = 'completed' WHERE out_trade_no = ?", [txRef])
+              await query('UPDATE users SET plan_id = ? WHERE id = ?', [tx.plan_id, tx.user_id])
+              status = 'success'
+            } else {
+              status = 'pending'
+            }
           }
         } catch {
           status = 'pending'

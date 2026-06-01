@@ -107,7 +107,7 @@ INSERT INTO users (email, password_hash, plan_id, is_active, is_admin, email_ver
 INSERT INTO profiles (user_id, username, display_name, bio, theme_color) VALUES
 (1, 'admin', 'Codevora Admin', 'Official Codevora Link admin account.', '#F97316');
 
--- Transactions table (Telebirr payments)
+-- Transactions table
 CREATE TABLE IF NOT EXISTS transactions (
   id INT PRIMARY KEY AUTO_INCREMENT,
   user_id INT NOT NULL,
@@ -115,6 +115,8 @@ CREATE TABLE IF NOT EXISTS transactions (
   amount DECIMAL(10,2) NOT NULL,
   plan_id INT NOT NULL,
   status ENUM('pending','completed','failed') NOT NULL DEFAULT 'pending',
+  payment_method ENUM('chapa','paypal') NOT NULL DEFAULT 'chapa',
+  paypal_order_id VARCHAR(100),
   telebirr_trade_no VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -112,9 +112,7 @@ export default function LoginPage() {
 
         {/* Demo hint */}
         <div className="mt-4 card p-4 bg-orange-50 border border-orange-100">
-          <p className="text-xs text-orange-600 text-center font-medium">
-            Admin demo: admin@codevora.com / Admin@123456
-          </p>
+      
         </div>
       </div>
     </div>
